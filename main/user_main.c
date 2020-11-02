@@ -23,7 +23,7 @@
 */
 
 
-#include "sht30.h"
+#include "sht3x.h"
 
 /**         
  * TEST CODE BRIEF

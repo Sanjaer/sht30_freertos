@@ -22,7 +22,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "sht30.h"
+#include "sht3x.h"
 
 /**
  * @brief temperature calculator from raw sensor data
@@ -39,6 +39,26 @@ float convert_raw_to_celsius(uint8_t *data){
 float convert_raw_to_humidity(uint8_t *data){
 
     return ((((data[3] * 256.0) + data[4]) * 100) / 65535.0);
+
+}
+
+/**
+ * @brief temperature checksum calculator from raw sensor data
+ */
+bool check_raw_temp_checksum(uint8_t *data){
+
+    // TODO
+    return true;
+
+}
+
+/**
+ * @brief humidity checksum calculator from raw sensor data
+ */
+bool check_raw_hum_checksum(uint8_t *data){
+
+    // TODO
+    return true;
 
 }
 
