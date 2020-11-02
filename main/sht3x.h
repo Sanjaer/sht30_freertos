@@ -56,6 +56,12 @@
 #define NACK_VAL                            0x1              /*!< I2C nack value */
 #define LAST_NACK_VAL                       0x2              /*!< I2C last_nack value */
 
+
+struct SensorData{
+    float temperature;
+    float humidity;
+};
+
 float convert_raw_to_celsius(uint8_t *data);
 float convert_raw_to_humidity(uint8_t *data);
 bool check_raw_temp_checksum(uint8_t *data);

@@ -60,7 +60,7 @@ static const char *TAG_TASK_WRITE = "WriteQ";
 static void i2c_task_example(void *arg)
 {
     uint8_t sensor_data[DATA_MSG_SIZE];
-    float temp=0, hum = 0;
+    struct SensorData *data_recvd = malloc(sizeof(struct SensorData));
     static uint32_t count = 0;
 
     vTaskDelay(100 / portTICK_RATE_MS);
@@ -75,21 +75,20 @@ static void i2c_task_example(void *arg)
  
         // Set to zeroes all data variables
         memset(sensor_data, 0, DATA_MSG_SIZE);
-        temp = 0;
-        hum = 0;
+        memset(data_recvd, 0, sizeof(struct SensorData));
 
         // Single shot data acquisition mode, clock stretching
         i2c_master_sht30_read(I2C_EXAMPLE_MASTER_NUM, SHT30_CMD_START_MSB, SHT30_CMD_START_LSB, sensor_data, DATA_MSG_SIZE);
 
         // Convert raw data to true values
-        temp = convert_raw_to_celsius(sensor_data);
-        hum = convert_raw_to_humidity(sensor_data);
+        data_recvd->temperature = convert_raw_to_celsius(sensor_data);
+        data_recvd->humidity = convert_raw_to_humidity(sensor_data);
 
         // Print values
         printf("count: %d\n", count);
-        printf("temp=%f, hum=%f\n", temp, hum);
+        printf("temp=%f, hum=%f\n", data_recvd->temperature, data_recvd->humidity);
 
-        if (!xQueueSend(i2c_lecture_queue, &temp, portMAX_DELAY)){
+        if (!xQueueSend(i2c_lecture_queue, data_recvd, portMAX_DELAY)){
             ESP_LOGI(TAG_TASK_WRITE, "ERROR Writing to queue\n");
         }
 
@@ -103,14 +102,16 @@ static void i2c_task_example(void *arg)
 /**
  * @brief task to show use case of a queue to read from the sensor task
  */
-static void read_queue_task_example(void *arg)
-{
-    float temp;
+static void read_queue_task_example(void *arg) {
+
+    struct SensorData *data_recvd = malloc(sizeof(struct SensorData));
 
     for (;;) {
-        temp = 0;
-        if (xQueueReceive(i2c_lecture_queue, &temp, portMAX_DELAY)) {
-            ESP_LOGI(TAG_TASK_READ, "Temperature from queue: %f\n", temp);
+        
+        memset(data_recvd, 0, sizeof(struct SensorData));
+
+        if (xQueueReceive(i2c_lecture_queue, data_recvd, portMAX_DELAY)) {
+            ESP_LOGI(TAG_TASK_READ, "Temperature from queue: %f\n", data_recvd->temperature);
         }
     }
 }
@@ -118,7 +119,7 @@ static void read_queue_task_example(void *arg)
 void app_main(void) {
 
     // Queue creation
-    i2c_lecture_queue = xQueueCreate(10, sizeof(float));
+    i2c_lecture_queue = xQueueCreate(10, sizeof(struct SensorData));
 
     // Start i2c publisher task
     xTaskCreate(i2c_task_example, "i2c_task_example", 2048, NULL, 10, NULL);
