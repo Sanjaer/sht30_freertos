@@ -25,6 +25,11 @@
 
 #include "sht3x.h"
 
+static xQueueHandle i2c_lecture_queue = NULL;
+static const char *TAG_MAIN = "main";
+static const char *TAG_TASK_READ = "ReadQ";
+static const char *TAG_TASK_WRITE = "WriteQ";
+
 /**         
  * TEST CODE BRIEF
  *
@@ -50,7 +55,9 @@
  */
 
 
-
+/**
+ * @brief task to show use case of a queue publish sensor data
+ */
 static void i2c_task_example(void *arg)
 {
     uint8_t sensor_data[DATA_MSG_SIZE];
@@ -83,14 +90,39 @@ static void i2c_task_example(void *arg)
         printf("count: %d\n", count);
         printf("temp=%f, hum=%f\n", temp, hum);
 
+        if (!xQueueSend(i2c_lecture_queue, &temp, portMAX_DELAY)){
+            ESP_LOGI(TAG_TASK_WRITE, "ERROR Writing to queue\n");
+        }
+
         vTaskDelay(1000 / portTICK_RATE_MS);
     }
 
     i2c_driver_delete(I2C_EXAMPLE_MASTER_NUM);
 }
 
-void app_main(void)
+
+/**
+ * @brief task to show use case of a queue to read from the sensor task
+ */
+static void read_queue_task_example(void *arg)
 {
-    //start i2c task
+    float temp;
+
+    for (;;) {
+        temp = 0;
+        if (xQueueReceive(i2c_lecture_queue, &temp, portMAX_DELAY)) {
+            ESP_LOGI(TAG_TASK_READ, "Temperature from queue: %f\n", temp);
+        }
+    }
+}
+
+void app_main(void) {
+
+    // Queue creation
+    i2c_lecture_queue = xQueueCreate(10, sizeof(float));
+
+    // Start i2c publisher task
     xTaskCreate(i2c_task_example, "i2c_task_example", 2048, NULL, 10, NULL);
+    // Start reader task
+    xTaskCreate(read_queue_task_example, "read_queue_task_example", 2048, NULL, 10, NULL);
 }
