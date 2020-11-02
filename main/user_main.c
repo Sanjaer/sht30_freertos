@@ -54,7 +54,7 @@
 static void i2c_task_example(void *arg)
 {
     uint8_t sensor_data[DATA_MSG_SIZE];
-    float temp=0;
+    float temp=0, hum = 0;
     static uint32_t count = 0;
 
     vTaskDelay(100 / portTICK_RATE_MS);
@@ -64,16 +64,24 @@ static void i2c_task_example(void *arg)
     
     while (1) {
 
+        // Counter num of iterations, no practical use
         count++;
  
-        // Clean sensor_data, set to zeroes
+        // Set to zeroes all data variables
         memset(sensor_data, 0, DATA_MSG_SIZE);
+        temp = 0;
+        hum = 0;
 
+        // Single shot data acquisition mode, clock stretching
         i2c_master_sht30_read(I2C_EXAMPLE_MASTER_NUM, SHT30_CMD_START_MSB, SHT30_CMD_START_LSB, sensor_data, DATA_MSG_SIZE);
 
+        // Convert raw data to true values
+        temp = convert_raw_to_celsius(sensor_data);
+        hum = convert_raw_to_humidity(sensor_data);
+
+        // Print values
         printf("count: %d\n", count);
-        temp = convert_temperature_to_celsius(sensor_data);
-        printf("temp=%f\n", temp);
+        printf("temp=%f, hum=%f\n", temp, hum);
 
         vTaskDelay(1000 / portTICK_RATE_MS);
     }

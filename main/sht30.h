@@ -55,6 +55,7 @@
 #define NACK_VAL                            0x1              /*!< I2C nack value */
 #define LAST_NACK_VAL                       0x2              /*!< I2C last_nack value */
 
-float convert_temperature_to_celsius(uint8_t *data);
+float convert_raw_to_celsius(uint8_t *data);
+float convert_raw_to_humidity(uint8_t *data);
 esp_err_t i2c_master_init(void);
 esp_err_t i2c_master_sht30_read(i2c_port_t i2c_num, uint8_t command_msb, uint8_t command_lsb, uint8_t *data, size_t data_len);

@@ -25,11 +25,20 @@
 #include "sht30.h"
 
 /**
- * @brief temperature calculator from raw data from sensor
+ * @brief temperature calculator from raw sensor data
  */
-float convert_temperature_to_celsius(uint8_t *data){
+float convert_raw_to_celsius(uint8_t *data){
 
     return ((((data[0] * 256.0) + data[1]) * 175) / 65535.0) - 45;
+
+}
+
+/**
+ * @brief humidity calculator from raw sensor data
+ */
+float convert_raw_to_humidity(uint8_t *data){
+
+    return ((((data[3] * 256.0) + data[4]) * 100) / 65535.0);
 
 }
 
